@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pexeso studio</title>
+<style>
+:root{
+  --bg:#eef1f4; --panel:#ffffff; --ink:#14202b; --muted:#5b6b7a; --line:#d3dae1;
+  --field:#ffffff; --accent:#2742d8; --accent-ink:#ffffff; --guide:#e5322d; --warn:#b3261e; --soft:#e4e9ee;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#10161c; --panel:#18212a; --ink:#e6ecf1; --muted:#92a1af; --line:#2c3945;
+    --field:#0f161c; --accent:#7b93ff; --accent-ink:#0b1020; --guide:#ff6b63; --warn:#ff8a80; --soft:#222e39;
+    color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column}
+button,input,select,textarea{font:inherit;color:inherit}
+button{background:var(--soft);border:1px solid var(--line);border-radius:6px;padding:6px 11px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,canvas:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button:disabled{opacity:.55;cursor:default}
+input[type=number],input[type=text],select,textarea{background:var(--field);border:1px solid var(--line);border-radius:6px;padding:6px 8px;width:100%}
+input[type=color]{width:100%;height:32px;padding:2px;background:var(--field);border:1px solid var(--line);border-radius:6px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+textarea{resize:vertical;min-height:44px}
+label{display:block;color:var(--muted);font-size:12.5px}
+label>input,label>select{margin-top:3px;color:var(--ink)}
+label.chk{display:flex;gap:8px;align-items:center;color:var(--ink);font-size:14px;margin:6px 0}
+label.chk input{width:auto;margin:0}
+
+header.top{display:flex;align-items:center;gap:14px;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap}
+header.top h1{font-size:17px;margin:0;letter-spacing:.01em}
+.status{color:var(--muted);font-size:12.5px;flex:1;min-width:160px}
+.status.err{color:var(--warn)}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+
+.app{flex:1;min-height:0;display:grid;grid-template-columns:400px 1fr}
+.side{overflow:auto;background:var(--panel);border-right:1px solid var(--line);padding:6px 16px 40px}
+.side section{padding:14px 0;border-bottom:1px solid var(--line)}
+.side section:last-child{border-bottom:0}
+.side h2{font-size:13.5px;margin:0 0 10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.note{color:var(--muted);font-size:12.5px;margin:8px 0 0}
+.note.warn{color:var(--warn)}
+.stack>*+*{margin-top:10px}
+
+.backs{display:grid;gap:10px}
+.back{display:flex;gap:12px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:8px}
+.back.sel,.pair.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.back canvas{border:1px solid var(--line);border-radius:4px;flex:none;width:64px;height:64px}
+.back b{display:block;font-size:13px;margin-bottom:6px}
+.btns{display:flex;gap:6px;flex-wrap:wrap}
+.btns button{padding:4px 9px;font-size:13px}
+
+.pairhead{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+#pairList{display:grid;gap:10px}
+.pair{display:grid;grid-template-columns:auto 1fr;gap:10px;padding:10px;border:1px solid var(--line);border-radius:8px}
+.thumbs{display:grid;gap:6px;align-content:start}
+.thumbs canvas{border:1px solid var(--line);border-radius:4px;display:block;width:56px;height:56px;cursor:pointer}
+.prow{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
+.inl{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.inl input{width:64px;margin:0}
+.warn{color:var(--warn);font-size:12.5px}
+.empty{color:var(--muted);margin:0}
+#projList{display:grid;gap:8px}
+.proj{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:8px}
+.proj.cur{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.proj b{font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.proj small{color:var(--muted);font-size:12px;grid-column:1}
+.proj .btns{grid-column:2;grid-row:1/3;justify-content:flex-end}
+
+main.main{min-width:0;overflow:auto;padding:16px 22px 40px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:16px}
+.tabs button{border:0;border-bottom:3px solid transparent;border-radius:0;background:none;padding:8px 14px;color:var(--muted)}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
+
+.edwrap{display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start}
+.cap{font-size:12.5px;color:var(--muted);margin-bottom:6px}
+.edwrap canvas{display:block;background:#fff;border:1px solid var(--line);border-radius:2px}
+#edCanvas{cursor:grab;touch-action:none}
+#edCanvas:active{cursor:grabbing}
+.ctrl{margin-top:20px;max-width:640px;display:grid;gap:12px}
+.crow{display:grid;grid-template-columns:110px 1fr 84px;gap:10px;align-items:center}
+.crow>span{color:var(--ink)}
+.crow input[type=number]{margin:0}
+.crow.bgrow{grid-template-columns:110px 84px 1fr}
+
+.sheetbar{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+#sheetWrap{width:100%}
+#sheetCanvas{display:block;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);max-width:100%}
+
+dialog{border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);padding:18px 20px;max-width:440px}
+dialog::backdrop{background:rgba(0,0,0,.4)}
+
+@media (max-width:900px){
+  .app{grid-template-columns:1fr;display:block;overflow:auto}
+  .side{border-right:0;border-bottom:1px solid var(--line);overflow:visible}
+  main.main{overflow:visible}
+  .crow{grid-template-columns:90px 1fr 76px}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>Pexeso studio</h1>
+  <span class="status" id="status" role="status"></span>
+  <div class="actions">
+    <button id="btnNew">Nový projekt</button>
+    <button id="btnOpen">Otevřít soubor</button>
+    <button id="btnSave">Uložit do souboru</button>
+    <button id="btnLink" title="Průběžné ukládání do souboru na disku (Chrome, Edge)">Propojit soubor</button>
+    <button id="btnPdf" class="primary">Exportovat PDF (300 dpi)</button>
+  </div>
+</header>
+
+<div class="app">
+  <aside class="side">
+    <section>
+      <h2>Projekt</h2>
+      <label>Název projektu<input type="text" id="projName" autocomplete="off"></label>
+      <h2 style="margin-top:14px">Poslední projekty v tomto prohlížeči</h2>
+      <div id="projList"></div>
+      <p class="note">Vše se ukládá automaticky hned po každé změně. Projekty zůstávají jen v tomto prohlížeči, pro zálohu nebo přenos použij Uložit do souboru.</p>
+    </section>
+
+    <section>
+      <h2>Tisk a rozměry</h2>
+      <div class="grid2">
+        <label>Strana dlaždice (mm)<input type="number" data-s="tile" min="10" max="150" step="0.5"></label>
+        <label>Spadávka (mm)<input type="number" data-s="bleed" min="0" max="10" step="0.5"></label>
+        <label>Délka ořezových značek (mm)<input type="number" data-s="mark" min="1" max="10" step="0.5"></label>
+        <label>Okraj archu (mm)<input type="number" data-s="margin" min="0" max="40" step="0.5"></label>
+        <label>Orientace archu A4
+          <select data-s="orient"><option value="portrait">Na výšku</option><option value="landscape">Na šířku</option></select>
+        </label>
+        <label>Otáčení archu u duplexu
+          <select data-s="flip"><option value="long">Přes dlouhou hranu</option><option value="short">Přes krátkou hranu</option></select>
+        </label>
+        <label>Korekce rubu vodorovně (mm)<input type="number" data-s="backDx" min="-5" max="5" step="0.1"></label>
+        <label>Korekce rubu svisle (mm)<input type="number" data-s="backDy" min="-5" max="5" step="0.1"></label>
+      </div>
+      <p class="note">Korekce posune celý rub (obrázky i značky) tak, jak ho vidíš na náhledu rubu. Nech 0 a sáhni na ni, jen když zkušební oboustranný tisk ukáže, že tiskárna rub posouvá.</p>
+      <label class="chk"><input type="checkbox" data-s="marksBack"> Ořezové značky i na rubu</label>
+      <label class="chk"><input type="checkbox" data-s="label"> Popisek archu v okraji</label>
+      <p class="note" id="info"></p>
+    </section>
+
+    <section>
+      <h2>Text na dlaždicích</h2>
+      <div class="stack">
+        <label>Font z Google Fonts<select id="fontSel" data-s="font"></select></label>
+        <label>Jiný font (název přesně jako na fonts.google.com)<input type="text" data-s="customFont" list="fontList" placeholder="např. Rubik" autocomplete="off"></label>
+        <datalist id="fontList"></datalist>
+        <div class="grid2">
+          <label>Výchozí velikost (pt)<input type="number" data-s="fontPt" min="4" max="200" step="1"></label>
+          <label>Řádkování<input type="number" data-s="lineH" min="0.8" max="2" step="0.05"></label>
+          <label>Barva textu<input type="color" data-s="textColor"></label>
+          <label>Barva pozadí<input type="color" data-s="textBg"></label>
+          <label>Vnitřní okraj (mm)<input type="number" data-s="pad" min="0" max="40" step="0.5"></label>
+        </div>
+        <label class="chk"><input type="checkbox" data-s="bold"> Tučné písmo</label>
+      </div>
+      <p class="note" id="fontNote">Zkontroluj, že font umí českou diakritiku (v Google Fonts je to sada latin-ext).</p>
+    </section>
+
+    <section>
+      <h2>Rub dlaždic</h2>
+      <div class="backs">
+        <div class="back" id="backImgCard">
+          <canvas width="128" height="128"></canvas>
+          <div><b>Rub obrázkových dlaždic</b>
+            <div class="btns"><button data-a="upload">Nahrát obrázek</button><button data-a="edit">Upravit</button></div>
+          </div>
+        </div>
+        <div class="back" id="backTxtCard">
+          <canvas width="128" height="128"></canvas>
+          <div><b>Rub textových dlaždic</b>
+            <div class="btns"><button data-a="upload">Nahrát obrázek</button><button data-a="edit">Upravit</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Páry</h2>
+      <div class="pairhead">
+        <button id="btnAddPair">Přidat pár</button>
+        <button id="btnAddMany">Přidat obrázky hromadně</button>
+      </div>
+      <div id="pairList"></div>
+    </section>
+  </aside>
+
+  <main class="main">
+    <div class="tabs" role="tablist">
+      <button role="tab" data-view="editor" class="on">Úprava dlaždice</button>
+      <button role="tab" data-view="front">Arch: líc</button>
+      <button role="tab" data-view="back">Arch: rub</button>
+    </div>
+
+    <div id="edPane">
+      <div class="edwrap">
+        <div><div class="cap" id="edCap"></div><canvas id="edCanvas" tabindex="0" aria-label="Úprava obrázku dlaždice"></canvas></div>
+        <div id="txtCol"><div class="cap">Líc: textová dlaždice (náhled)</div><canvas id="txCanvas"></canvas></div>
+      </div>
+      <div class="ctrl" id="ctrl">
+        <div class="crow"><span>Měřítko</span><input type="range" data-f="scale" min="0.1" max="5" step="0.01"><input type="number" data-f="scale" min="0.05" max="10" step="0.01"></div>
+        <div class="crow"><span>Otočení (°)</span><input type="range" data-f="rot" min="-180" max="180" step="0.5"><input type="number" data-f="rot" min="-360" max="360" step="0.5"></div>
+        <div class="crow"><span>Posun X (%)</span><input type="range" data-f="x" min="-100" max="100" step="0.1"><input type="number" data-f="x" min="-300" max="300" step="0.1"></div>
+        <div class="crow"><span>Posun Y (%)</span><input type="range" data-f="y" min="-100" max="100" step="0.1"><input type="number" data-f="y" min="-300" max="300" step="0.1"></div>
+        <div class="crow bgrow"><span>Pozadí</span><input type="color" data-f="bg"><span class="note" style="margin:0">Vidět, když je obrázek menší než dlaždice.</span></div>
+        <div class="btns">
+          <button id="btnRot90">Otočit o 90°</button>
+          <button id="btnReset">Vynulovat úpravy</button>
+          <button id="btnSwap">Vybrat jiný obrázek</button>
+          <button id="btnClearImg">Odebrat obrázek</button>
+        </div>
+      </div>
+      <p class="note" style="max-width:640px">Tažením myší posouváš obrázek, kolečkem ho přibližuješ. Měřítko 1 znamená, že obrázek přesně vyplní dlaždici včetně spadávky. Červená čárkovaná čára je ořez, ztmavená část kolem je spadávka a ta se po řezání ztratí.</p>
+    </div>
+
+    <div id="sheetPane" hidden>
+      <div class="sheetbar">
+        <button id="pgPrev">Předchozí</button>
+        <span id="pgInfo"></span>
+        <button id="pgNext">Další</button>
+      </div>
+      <div id="sheetWrap"><canvas id="sheetCanvas"></canvas></div>
+      <p class="note" id="sheetNote" style="max-width:640px"></p>
+    </div>
+  </main>
+</div>
+
+<input type="file" id="fileOne" accept="image/*" hidden>
+<input type="file" id="fileMany" accept="image/*" multiple hidden>
+<input type="file" id="fileJson" accept=".json,application/json" hidden>
+
+<script>
+(() => {
+'use strict';
+
+/* ---------- pomocné ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const MM_PT = 72 / 25.4;
+const PT_MM = 25.4 / 72;
+const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const tick = () => new Promise(r => setTimeout(r, 0));
+const CZ = 'ÁČĎÉĚÍŇÓŘŠŤÚŮÝŽáčďéěíňóřšťúůýž';
+
+const FONTS = ['Lobster','Fredoka','Baloo 2','Amatic SC','Caveat','Patrick Hand','Comfortaa','Bangers','Poppins','Montserrat','Nunito','Raleway','Oswald','Roboto','Open Sans','Lato','Merriweather','Playfair Display','Lora','Cinzel'];
+
+/* ---------- stav ---------- */
+const newTr = (bg = '#ffffff') => ({ asset: null, scale: 1, x: 0, y: 0, rot: 0, bg });
+const newPair = (text = '') => ({ id: uid(), text, pt: null, img: newTr('#ffffff') });
+const makeDefault = () => ({
+  v: 2, id: uid(), name: 'Nový projekt',
+  s: { tile: 50, bleed: 3, mark: 3, margin: 8, orient: 'portrait', flip: 'long', marksBack: true, label: true,
+       backDx: 0, backDy: 0,
+       font: 'Lobster', customFont: '', bold: false, fontPt: 26, lineH: 1.15, textColor: '#2b2118', textBg: '#f6edd9', pad: 5 },
+  backs: { img: newTr('#2f5d62'), txt: newTr('#8a4b2d') },
+  pairs: [],
+  assets: {}
+});
+const freshProject = () => { const d = makeDefault(); d.pairs.push(newPair('Ukázka')); return d; };
+let S = freshProject();
+
+let sel = null;            // {kind:'pair', id} | {kind:'back', key:'img'|'txt'}
+let view = 'editor';
+let sheetIdx = 0;
+
+/* ---------- geometrie archu ---------- */
+function geom() {
+  const s = S.s, land = s.orient === 'landscape';
+  const W = land ? 297 : 210, H = land ? 210 : 297;
+  const cell = s.tile + 2 * s.bleed;
+  const gap = 2 * s.mark + 1;
+  const mg = Math.max(s.margin, s.mark + 1);
+  const cols = Math.max(0, Math.floor((W - 2 * mg + gap) / (cell + gap)));
+  const rows = Math.max(0, Math.floor((H - 2 * mg + gap) / (cell + gap)));
+  const gw = cols * cell + (cols - 1) * gap, gh = rows * cell + (rows - 1) * gap;
+  return { W, H, cell, gap, cols, rows, per: cols * rows, x0: (W - gw) / 2, y0: (H - gh) / 2 };
+}
+const allTiles = () => {
+  const t = [];
+  S.pairs.forEach(p => { t.push({ kind: 'img', p }); t.push({ kind: 'txt', p }); });
+  return t;
+};
+const sheetCount = () => { const g = geom(); return g.per ? Math.ceil(allTiles().length / g.per) : 0; };
+const mirrorX = () => (S.s.flip === 'long') === (S.s.orient === 'portrait');
+
+function tilePos(i, side) {
+  const g = geom();
+  let r = Math.floor(i / g.cols), c = i % g.cols;
+  let dx = 0, dy = 0;
+  if (side === 'back') { if (mirrorX()) c = g.cols - 1 - c; else r = g.rows - 1 - r; dx = S.s.backDx || 0; dy = S.s.backDy || 0; }
+  return { ox: g.x0 + c * (g.cell + g.gap) + dx, oy: g.y0 + r * (g.cell + g.gap) + dy };
+}
+function markSegs(ox, oy) {
+  const { bleed: B, tile: T, mark: m } = S.s, size = T + 2 * B, seg = [];
+  [ox + B, ox + B + T].forEach(x => { seg.push([x, oy - m, x, oy]); seg.push([x, oy + size, x, oy + size + m]); });
+  [oy + B, oy + B + T].forEach(y => { seg.push([ox - m, y, ox, y]); seg.push([ox + size, y, ox + size + m, y]); });
+  return seg;
+}
+function sheetSegs(idx, side) {
+  if (side === 'back' && !S.s.marksBack) return [];
+  const g = geom(), n = allTiles().slice(idx * g.per, (idx + 1) * g.per).length, out = [];
+  for (let i = 0; i < n; i++) { const { ox, oy } = tilePos(i, side); out.push(...markSegs(ox, oy)); }
+  return out;
+}
+
+/* ---------- obrázky ---------- */
+const imgCache = new Map();
+function getImg(id) {
+  if (!id || !S.assets[id]) return null;
+  let im = imgCache.get(id);
+  if (!im) {
+    im = new Image();
+    im.onload = () => { requestRender(); renderAllThumbs(); };
+    im.src = S.assets[id];
+    imgCache.set(id, im);
+  }
+  return (im.complete && im.naturalWidth > 0) ? im : null;
+}
+async function ensureAllImages() {
+  const ids = new Set();
+  S.pairs.forEach(p => p.img.asset && ids.add(p.img.asset));
+  ['img', 'txt'].forEach(k => S.backs[k].asset && ids.add(S.backs[k].asset));
+  for (const id of ids) {
+    getImg(id);
+    const im = imgCache.get(id);
+    if (im && !(im.complete && im.naturalWidth > 0)) {
+      await new Promise(res => { im.addEventListener('load', res, { once: true }); im.addEventListener('error', res, { once: true }); });
+    }
+  }
+}
+function hasAlpha(c) {
+  const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+  for (let i = 3; i < d.length; i += 4) if (d[i] < 250) return true;
+  return false;
+}
+async function addAsset(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const im = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('Obrázek se nepodařilo načíst')); i.src = url; });
+    const nw = im.naturalWidth || 1000, nh = im.naturalHeight || 1000;
+    const MAX = 2600, sc = Math.min(1, MAX / Math.max(nw, nh));
+    const w = Math.max(1, Math.round(nw * sc)), h = Math.max(1, Math.round(nh * sc));
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const x = c.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(im, 0, 0, w, h);
+    const maybeAlpha = /png|gif|svg|webp/.test(file.type);
+    const data = (maybeAlpha && hasAlpha(c)) ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', 0.92);
+    const id = uid(); S.assets[id] = data; return id;
+  } finally { URL.revokeObjectURL(url); }
+}
+function gcAssets() {
+  const used = new Set();
+  S.pairs.forEach(p => p.img.asset && used.add(p.img.asset));
+  ['img', 'txt'].forEach(k => S.backs[k].asset && used.add(S.backs[k].asset));
+  Object.keys(S.assets).forEach(id => { if (!used.has(id)) { delete S.assets[id]; imgCache.delete(id); } });
+}
+
+/* ---------- fonty ---------- */
+const loadedFonts = new Set();
+const famName = () => (S.s.customFont.trim() || S.s.font).replace(/["'\\;{}<>]/g, '');
+function injectFont(fam) {
+  return new Promise(res => {
+    const q = encodeURIComponent(fam).replace(/%20/g, '+');
+    const add = (href, fallback) => {
+      const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = href;
+      l.onload = () => res(true);
+      l.onerror = () => { l.remove(); fallback ? fallback() : res(false); };
+      document.head.appendChild(l);
+    };
+    add(`https://fonts.googleapis.com/css2?family=${q}:wght@400;700&display=swap`,
+        () => add(`https://fonts.googleapis.com/css2?family=${q}&display=swap`));
+  });
+}
+async function ensureFont() {
+  const fam = famName(), note = $('#fontNote');
+  if (!loadedFonts.has(fam)) {
+    const ok = await injectFont(fam);
+    if (ok) loadedFonts.add(fam);
+    note.classList.toggle('warn', !ok);
+    note.textContent = ok ? 'Zkontroluj, že font umí českou diakritiku (v Google Fonts je to sada latin-ext).'
+                          : 'Font se nepodařilo načíst. Zkontroluj název a připojení k internetu.';
+  }
+  const sample = S.pairs.map(p => p.text).join('') + CZ;
+  try {
+    await Promise.all([document.fonts.load(`400 40px "${fam}"`, sample), S.s.bold ? document.fonts.load(`700 40px "${fam}"`, sample) : null]);
+  } catch (e) { /* ignorováno */ }
+  renderAllThumbs(); requestRender();
+}
+let fontTimer = null;
+const ensureFontSoon = () => { clearTimeout(fontTimer); fontTimer = setTimeout(ensureFont, 300); };
+const fontCss = px => `${S.s.bold ? 700 : 400} ${px}px "${famName()}", system-ui, sans-serif`;
+
+/* ---------- kreslení dlaždic ---------- */
+function drawImageLayer(ctx, tr, ox, oy, k, preview) {
+  const { tile: T, bleed: B } = S.s, size = (T + 2 * B) * k;
+  ctx.save(); ctx.beginPath(); ctx.rect(ox, oy, size, size); ctx.clip();
+  ctx.fillStyle = tr.bg || '#fff'; ctx.fillRect(ox, oy, size, size);
+  const im = getImg(tr.asset);
+  if (im) {
+    const cover = Math.max(size / im.naturalWidth, size / im.naturalHeight) * tr.scale;
+    ctx.translate(ox + size / 2 + tr.x * T * k, oy + size / 2 + tr.y * T * k);
+    ctx.rotate(tr.rot * Math.PI / 180);
+    ctx.scale(cover, cover);
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(im, -im.naturalWidth / 2, -im.naturalHeight / 2);
+  } else if (preview) {
+    ctx.fillStyle = 'rgba(128,128,128,.22)'; ctx.fillRect(ox, oy, size, size);
+    ctx.fillStyle = '#7d8791'; ctx.font = `${size * 0.075}px system-ui, sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('bez obrázku', ox + size / 2, oy + size / 2);
+  }
+  ctx.restore();
+}
+function wrapText(ctx, text, maxW) {
+  const out = [];
+  for (const para of String(text).split('\n')) {
+    const words = para.split(/\s+/).filter(Boolean);
+    if (!words.length) { out.push(''); continue; }
+    let line = words[0];
+    for (let i = 1; i < words.length; i++) {
+      const t = line + ' ' + words[i];
+      if (ctx.measureText(t).width <= maxW) line = t; else { out.push(line); line = words[i]; }
+    }
+    out.push(line);
+  }
+  return out;
+}
+function drawTextLayer(ctx, pair, ox, oy, k) {
+  const s = S.s, size = (s.tile + 2 * s.bleed) * k;
+  ctx.save(); ctx.beginPath(); ctx.rect(ox, oy, size, size); ctx.clip();
+  ctx.fillStyle = s.textBg; ctx.fillRect(ox, oy, size, size);
+  const fpx = (pair.pt || s.fontPt) * PT_MM * k;
+  ctx.font = fontCss(fpx); ctx.fillStyle = s.textColor; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const lines = wrapText(ctx, pair.text || '', (s.tile - 2 * s.pad) * k);
+  const lh = fpx * s.lineH, total = lh * lines.length, cx = ox + size / 2, cy = oy + size / 2;
+  lines.forEach((l, i) => ctx.fillText(l, cx, cy - total / 2 + lh * (i + 0.5)));
+  ctx.restore();
+}
+const measureCv = document.createElement('canvas').getContext('2d');
+function textOverflows(pair) {
+  if (!pair.text) return false;
+  const s = S.s, k = 10, fpx = (pair.pt || s.fontPt) * PT_MM * k;
+  measureCv.font = fontCss(fpx);
+  const maxW = (s.tile - 2 * s.pad) * k, lines = wrapText(measureCv, pair.text, maxW);
+  return lines.some(l => measureCv.measureText(l).width > maxW + 1) || lines.length * fpx * s.lineH > (s.tile - 2 * s.pad) * k + 1;
+}
+
+function drawMarksCanvas(ctx, ox, oy, k) {
+  ctx.save(); ctx.strokeStyle = '#000'; ctx.lineWidth = Math.max(1, 0.1 * k); ctx.beginPath();
+  markSegs(ox, oy).forEach(([x1, y1, x2, y2]) => { ctx.moveTo(x1 * k, y1 * k); ctx.lineTo(x2 * k, y2 * k); });
+  ctx.stroke(); ctx.restore();
+}
+function drawSheet(ctx, idx, side, k, o) {
+  const g = geom();
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, g.W * k, g.H * k);
+  const tiles = allTiles().slice(idx * g.per, (idx + 1) * g.per);
+  tiles.forEach((t, i) => {
+    const { ox, oy } = tilePos(i, side), px = ox * k, py = oy * k;
+    if (side === 'front') {
+      if (t.kind === 'img') drawImageLayer(ctx, t.p.img, px, py, k, o.preview); else drawTextLayer(ctx, t.p, px, py, k);
+    } else {
+      drawImageLayer(ctx, t.kind === 'img' ? S.backs.img : S.backs.txt, px, py, k, o.preview);
+    }
+    if (o.marks && (side === 'front' || S.s.marksBack)) drawMarksCanvas(ctx, px / k, py / k, k);
+  });
+  if (S.s.label && g.y0 - S.s.mark > 5) {
+    ctx.fillStyle = '#8a8a8a'; ctx.font = `${2.2 * k}px system-ui, sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(`Pexeso, list ${idx + 1}/${sheetCount()}, ${side === 'front' ? 'líc' : 'rub'}`, g.W / 2 * k, 3.2 * k);
+  }
+}
+function drawGuides(ctx, k) {
+  const B = S.s.bleed * k, T = S.s.tile * k, size = (S.s.tile + 2 * S.s.bleed) * k;
+  ctx.save(); ctx.fillStyle = 'rgba(0,0,0,.30)'; ctx.beginPath();
+  ctx.rect(0, 0, size, size); ctx.rect(B, B, T, T); ctx.fill('evenodd');
+  ctx.strokeStyle = '#e5322d'; ctx.setLineDash([6, 4]); ctx.lineWidth = 1.5; ctx.strokeRect(B, B, T, T);
+  ctx.restore();
+}
+
+/* ---------- výběr a editor ---------- */
+const pairById = id => S.pairs.find(p => p.id === id);
+function curTr() {
+  if (!sel) return null;
+  if (sel.kind === 'pair') { const p = pairById(sel.id); return p ? p.img : null; }
+  return S.backs[sel.key];
+}
+function setSel(x) { sel = x; updateSelUI(); syncCtrl(); requestRender(); }
+function updateSelUI() {
+  $$('.pair').forEach(r => r.classList.toggle('sel', !!sel && sel.kind === 'pair' && r.dataset.id === sel.id));
+  $('#backImgCard').classList.toggle('sel', !!sel && sel.kind === 'back' && sel.key === 'img');
+  $('#backTxtCard').classList.toggle('sel', !!sel && sel.kind === 'back' && sel.key === 'txt');
+}
+function setupCanvas(cv, css) {
+  const dpr = window.devicePixelRatio || 1, w = Math.round(css * dpr);
+  if (cv.width !== w || cv.height !== w) { cv.width = w; cv.height = w; }
+  cv.style.width = css + 'px'; cv.style.height = css + 'px';
+  return cv.getContext('2d');
+}
+function renderEditor() {
+  const ed = $('#edCanvas'), tx = $('#txCanvas'), size = S.s.tile + 2 * S.s.bleed;
+  const avail = Math.max(240, Math.min(460, $('.main').clientWidth - 60));
+  const ctx = setupCanvas(ed, avail), k = ed.width / size;
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, ed.width, ed.height);
+  const tr = curTr();
+  $('#txtCol').hidden = !(sel && sel.kind === 'pair');
+  if (!tr) {
+    ctx.fillStyle = '#7d8791'; ctx.font = `${14 * (window.devicePixelRatio || 1)}px system-ui`; ctx.textAlign = 'center';
+    ctx.fillText('Vyber pár nebo rub v levém panelu', ed.width / 2, ed.height / 2);
+    $('#edCap').textContent = ''; return;
+  }
+  drawImageLayer(ctx, tr, 0, 0, k, true); drawGuides(ctx, k);
+  if (sel.kind === 'pair') {
+    const i = S.pairs.findIndex(p => p.id === sel.id);
+    $('#edCap').textContent = `Líc: obrázková dlaždice, pár ${i + 1}`;
+    const tctx = setupCanvas(tx, Math.round(avail * 0.5)), tk = tx.width / size;
+    drawTextLayer(tctx, pairById(sel.id), 0, 0, tk); drawGuides(tctx, tk);
+  } else {
+    $('#edCap').textContent = sel.key === 'img' ? 'Rub obrázkových dlaždic' : 'Rub textových dlaždic';
+  }
+}
+function renderSheet() {
+  const g = geom(), cv = $('#sheetCanvas'), n = sheetCount(), side = view === 'front' ? 'front' : 'back';
+  const cssW = Math.max(240, Math.min($('#sheetWrap').clientWidth - 4, 760));
+  const dpr = Math.min(window.devicePixelRatio || 1, 2), pw = Math.round(cssW * dpr);
+  cv.width = pw; cv.height = Math.round(pw * g.H / g.W);
+  cv.style.width = cssW + 'px'; cv.style.height = (cssW * g.H / g.W) + 'px';
+  const ctx = cv.getContext('2d'), k = pw / g.W;
+  sheetIdx = clamp(sheetIdx, 0, Math.max(0, n - 1));
+  if (!n) {
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
+    ctx.fillStyle = '#7d8791'; ctx.font = `${14 * dpr}px system-ui`; ctx.textAlign = 'center';
+    ctx.fillText(g.per ? 'Přidej alespoň jeden pár' : 'Dlaždice se na arch nevejde', cv.width / 2, cv.height / 2);
+  } else drawSheet(ctx, sheetIdx, side, k, { marks: true, preview: true });
+  $('#pgInfo').textContent = n ? `List ${sheetIdx + 1} z ${n}` : 'Žádný list';
+  $('#pgPrev').disabled = sheetIdx <= 0; $('#pgNext').disabled = sheetIdx >= n - 1;
+  $('#sheetNote').textContent = side === 'front'
+    ? 'Takto bude vypadat líc v PDF. Tiskni ve skutečné velikosti (100 %), bez přizpůsobení stránce.'
+    : `Takto bude vypadat rub v PDF. ${mirrorX() ? 'Sloupce' : 'Řádky'} jsou záměrně zrcadlově prohozené, aby po otočení archu seděly přesně na líc. Tiskni ve skutečné velikosti (100 %), bez přizpůsobení stránce.`;
+}
+let rafPending = false;
+function requestRender() {
+  if (rafPending) return; rafPending = true;
+  requestAnimationFrame(() => {
+    rafPending = false;
+    if (view === 'editor') renderEditor(); else renderSheet();
+    if (sel && sel.kind === 'pair') renderThumbs(pairById(sel.id));
+    renderBackThumbs();
+  });
+}
+
+/* ---------- náhledy ---------- */
+function thumbTile(cv, drawFn) {
+  const size = S.s.tile + 2 * S.s.bleed, ctx = cv.getContext('2d'), k = cv.width / size;
+  ctx.clearRect(0, 0, cv.width, cv.height); drawFn(ctx, k);
+}
+function renderThumbs(p) {
+  if (!p) return;
+  const row = $(`.pair[data-id="${p.id}"]`); if (!row) return;
+  thumbTile($('.t-img', row), (c, k) => drawImageLayer(c, p.img, 0, 0, k, true));
+  thumbTile($('.t-txt', row), (c, k) => drawTextLayer(c, p, 0, 0, k));
+  $('.warn', row).hidden = !textOverflows(p);
+}
+function renderAllThumbs() { S.pairs.forEach(renderThumbs); renderBackThumbs(); }
+function renderBackThumbs() {
+  thumbTile($('canvas', $('#backImgCard')), (c, k) => drawImageLayer(c, S.backs.img, 0, 0, k, true));
+  thumbTile($('canvas', $('#backTxtCard')), (c, k) => drawImageLayer(c, S.backs.txt, 0, 0, k, true));
+}
+
+/* ---------- seznam párů ---------- */
+function renderPairs() {
+  const list = $('#pairList'); list.textContent = '';
+  if (!S.pairs.length) {
+    const p = document.createElement('p'); p.className = 'empty';
+    p.textContent = 'Zatím žádný pár. Přidej první, nebo nahraj víc obrázků najednou.'; list.appendChild(p);
+  }
+  S.pairs.forEach((p, i) => {
+    const row = document.createElement('div'); row.className = 'pair'; row.dataset.id = p.id;
+    row.innerHTML = `
+      <div class="thumbs"><canvas class="t-img" width="112" height="112"></canvas><canvas class="t-txt" width="112" height="112"></canvas></div>
+      <div class="pf">
+        <textarea rows="2" placeholder="Text uprostřed dlaždice"></textarea>
+        <div class="prow"><label class="inl">Velikost (pt)<input type="number" class="pt" min="4" max="200" step="1"></label><span class="warn" hidden>Text se nevejde</span></div>
+        <div class="prow btns"><button data-a="img">Obrázek</button><button data-a="edit">Upravit</button><button data-a="up" title="Posunout výš">▲</button><button data-a="down" title="Posunout níž">▼</button><button data-a="del">Smazat</button></div>
+      </div>`;
+    const ta = $('textarea', row), pt = $('.pt', row);
+    ta.value = p.text; pt.value = p.pt || ''; pt.placeholder = S.s.fontPt;
+    ta.addEventListener('input', () => { p.text = ta.value; renderThumbs(p); requestRender(); markDirty(); ensureFontSoon(); });
+    ta.addEventListener('focus', () => setSel({ kind: 'pair', id: p.id }));
+    pt.addEventListener('input', () => { const v = parseFloat(pt.value); p.pt = isFinite(v) && v > 0 ? v : null; renderThumbs(p); requestRender(); markDirty(); });
+    row.addEventListener('click', e => {
+      if (e.target.tagName === 'CANVAS') { setSel({ kind: 'pair', id: p.id }); setView('editor'); return; }
+      const a = e.target.dataset && e.target.dataset.a;
+      if (!a) return;
+      if (a === 'edit') { setSel({ kind: 'pair', id: p.id }); setView('editor'); }
+      if (a === 'img') pickImage(async id => { p.img.asset = id; setSel({ kind: 'pair', id: p.id }); renderThumbs(p); requestRender(); markDirty(); });
+      if (a === 'up' && i > 0) { [S.pairs[i - 1], S.pairs[i]] = [S.pairs[i], S.pairs[i - 1]]; renderPairs(); afterStructure(); }
+      if (a === 'down' && i < S.pairs.length - 1) { [S.pairs[i + 1], S.pairs[i]] = [S.pairs[i], S.pairs[i + 1]]; renderPairs(); afterStructure(); }
+      if (a === 'del' && confirm('Smazat tento pár?')) {
+        S.pairs.splice(i, 1);
+        if (sel && sel.kind === 'pair' && sel.id === p.id) sel = S.pairs[0] ? { kind: 'pair', id: S.pairs[0].id } : null;
+        renderPairs(); afterStructure();
+      }
+    });
+    list.appendChild(row);
+  });
+  updateSelUI(); renderAllThumbs();
+}
+function afterStructure() { updateInfo(); syncCtrl(); updateSelUI(); requestRender(); markDirty(); }
+
+/* ---------- nahrávání ---------- */
+function pickImage(cb) {
+  const f = $('#fileOne');
+  f.onchange = async () => {
+    const file = f.files[0]; f.value = '';
+    if (!file) return;
+    try { cb(await addAsset(file)); } catch (e) { alert(e.message || 'Nahrání se nepodařilo.'); }
+  };
+  f.click();
+}
+$('#btnAddPair').addEventListener('click', () => {
+  const p = newPair(''); S.pairs.push(p); sel = { kind: 'pair', id: p.id };
+  renderPairs(); afterStructure();
+  const ta = $(`.pair[data-id="${p.id}"] textarea`); if (ta) ta.focus();
+});
+$('#btnAddMany').addEventListener('click', () => {
+  const f = $('#fileMany');
+  f.onchange = async () => {
+    const files = [...f.files].sort((a, b) => a.name.localeCompare(b.name, 'cs', { numeric: true })); f.value = '';
+    if (!files.length) return;
+    const p0 = S.pairs[0];
+    if (S.pairs.length === 1 && p0.text === 'Ukázka' && !p0.img.asset && !p0.pt) S.pairs = [];
+    setStatus(`Nahrávám obrázky (0/${files.length})`);
+    let done = 0, last = null;
+    for (const file of files) {
+      try {
+        const id = await addAsset(file), p = newPair(''); p.img.asset = id; S.pairs.push(p); last = p;
+      } catch (e) { /* přeskočit nečitelný soubor */ }
+      setStatus(`Nahrávám obrázky (${++done}/${files.length})`); await tick();
+    }
+    if (last) sel = { kind: 'pair', id: last.id };
+    renderPairs(); afterStructure();
+  };
+  f.click();
+});
+['img', 'txt'].forEach(key => {
+  const card = $(key === 'img' ? '#backImgCard' : '#backTxtCard');
+  card.addEventListener('click', e => {
+    const a = e.target.dataset && e.target.dataset.a; if (!a) return;
+    if (a === 'edit') { setSel({ kind: 'back', key }); setView('editor'); }
+    if (a === 'upload') pickImage(id => { S.backs[key].asset = id; setSel({ kind: 'back', key }); requestRender(); markDirty(); });
+  });
+});
+
+/* ---------- ovládání obrázku ---------- */
+function syncCtrl(skip) {
+  const tr = curTr(), box = $('#ctrl');
+  $$('input,button', box).forEach(el => { el.disabled = !tr; });
+  if (!tr) return;
+  $$('[data-f]').forEach(el => {
+    if (el === skip) return;
+    const f = el.dataset.f;
+    let v = tr[f];
+    if (f === 'x' || f === 'y') v = Math.round(v * 1000) / 10;
+    else if (f === 'scale') v = Math.round(v * 100) / 100;
+    else if (f === 'rot') v = Math.round(v * 10) / 10;
+    el.value = v;
+  });
+  $('#btnClearImg').disabled = !tr.asset;
+}
+$$('[data-f]').forEach(el => el.addEventListener('input', () => {
+  const tr = curTr(); if (!tr) return;
+  const f = el.dataset.f;
+  let v = el.type === 'color' ? el.value : parseFloat(el.value);
+  if (el.type !== 'color' && !isFinite(v)) return;
+  if (f === 'x' || f === 'y') v /= 100;
+  if (f === 'scale') v = Math.max(0.05, v);
+  tr[f] = v; syncCtrl(el); afterEdit();
+}));
+function afterEdit() { requestRender(); if (sel && sel.kind === 'pair') renderThumbs(pairById(sel.id)); markDirty(); }
+$('#btnRot90').addEventListener('click', () => {
+  const tr = curTr(); if (!tr) return;
+  let r = Math.round((tr.rot + 90) / 90) * 90; if (r > 180) r -= 360; tr.rot = r; syncCtrl(); afterEdit();
+});
+$('#btnReset').addEventListener('click', () => { const tr = curTr(); if (!tr) return; tr.scale = 1; tr.x = 0; tr.y = 0; tr.rot = 0; syncCtrl(); afterEdit(); });
+$('#btnSwap').addEventListener('click', () => { const tr = curTr(); if (!tr) return; pickImage(id => { tr.asset = id; syncCtrl(); afterEdit(); }); });
+$('#btnClearImg').addEventListener('click', () => { const tr = curTr(); if (!tr) return; tr.asset = null; syncCtrl(); afterEdit(); });
+
+const ed = $('#edCanvas');
+let drag = null;
+ed.addEventListener('pointerdown', e => {
+  const tr = curTr(); if (!tr) return;
+  ed.setPointerCapture(e.pointerId); drag = { x: e.clientX, y: e.clientY, tx: tr.x, ty: tr.y };
+});
+ed.addEventListener('pointermove', e => {
+  if (!drag) return; const tr = curTr(); if (!tr) return;
+  const cssPerMm = ed.getBoundingClientRect().width / (S.s.tile + 2 * S.s.bleed);
+  tr.x = drag.tx + (e.clientX - drag.x) / (cssPerMm * S.s.tile);
+  tr.y = drag.ty + (e.clientY - drag.y) / (cssPerMm * S.s.tile);
+  syncCtrl(); afterEdit();
+});
+['pointerup', 'pointercancel'].forEach(t => ed.addEventListener(t, () => { drag = null; }));
+ed.addEventListener('wheel', e => {
+  const tr = curTr(); if (!tr) return; e.preventDefault();
+  tr.scale = clamp(tr.scale * Math.exp(-e.deltaY * 0.0015), 0.05, 10); syncCtrl(); afterEdit();
+}, { passive: false });
+ed.addEventListener('keydown', e => {
+  const tr = curTr(); if (!tr) return;
+  const st = e.shiftKey ? 0.05 : 0.01; let used = true;
+  if (e.key === 'ArrowLeft') tr.x -= st; else if (e.key === 'ArrowRight') tr.x += st;
+  else if (e.key === 'ArrowUp') tr.y -= st; else if (e.key === 'ArrowDown') tr.y += st;
+  else if (e.key === '+' || e.key === '=') tr.scale *= 1.03; else if (e.key === '-') tr.scale /= 1.03;
+  else used = false;
+  if (used) { e.preventDefault(); syncCtrl(); afterEdit(); }
+});
+
+/* ---------- nastavení ---------- */
+const NUM_LIMITS = { backDx: [-5, 5], backDy: [-5, 5], tile: [10, 150], bleed: [0, 10], mark: [1, 10], margin: [0, 40], fontPt: [4, 200], lineH: [0.8, 2], pad: [0, 40] };
+function syncSettingsUI() {
+  $$('[data-s]').forEach(el => {
+    const v = S.s[el.dataset.s];
+    if (el.type === 'checkbox') el.checked = !!v; else el.value = v;
+  });
+}
+function buildFontList() {
+  const sel = $('#fontSel'), dl = $('#fontList');
+  FONTS.forEach(f => { const o = document.createElement('option'); o.value = f; o.textContent = f; sel.appendChild(o); const d = document.createElement('option'); d.value = f; dl.appendChild(d); });
+}
+function updateInfo() {
+  const g = geom(), tiles = allTiles().length, n = sheetCount(), info = $('#info');
+  if (!g.per) { info.className = 'note warn'; info.textContent = 'Dlaždice se i se spadávkou a značkami nevejde na arch A4. Zmenši ji.'; return; }
+  info.className = 'note';
+  info.textContent = `Arch A4, ${g.cols} × ${g.rows} = ${g.per} dlaždic na list. Celkem ${S.pairs.length} párů (${tiles} dlaždic), ${n} ${n === 1 ? 'list' : n >= 2 && n <= 4 ? 'listy' : 'listů'}, v PDF ${n * 2} ${n * 2 <= 4 ? 'strany' : 'stran'} při 300 dpi.`;
+}
+$$('[data-s]').forEach(el => {
+  const key = el.dataset.s;
+  el.addEventListener('input', () => {
+    let v;
+    if (el.type === 'checkbox') v = el.checked;
+    else if (el.type === 'number') { v = parseFloat(el.value); if (!isFinite(v)) return; const lim = NUM_LIMITS[key]; if (lim) v = clamp(v, lim[0], lim[1]); }
+    else v = el.value;
+    S.s[key] = v;
+    if (key === 'font' && S.s.customFont) { S.s.customFont = ''; $('[data-s="customFont"]').value = ''; }
+    if (key === 'font' || key === 'customFont' || key === 'bold') ensureFontSoon();
+    if (key === 'fontPt') $$('.pair .pt').forEach(i => { i.placeholder = v; });
+    updateInfo(); renderAllThumbs(); requestRender(); markDirty();
+  });
+  if (el.type === 'number') el.addEventListener('change', () => { el.value = S.s[key]; });
+});
+
+/* ---------- záložky a listy ---------- */
+function setView(v) {
+  view = v;
+  $$('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.view === v));
+  $('#edPane').hidden = v !== 'editor'; $('#sheetPane').hidden = v === 'editor';
+  requestRender();
+}
+$$('.tabs button').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
+$('#pgPrev').addEventListener('click', () => { sheetIdx--; requestRender(); });
+$('#pgNext').addEventListener('click', () => { sheetIdx++; requestRender(); });
+window.addEventListener('resize', requestRender);
+
+/* ---------- ukládání ---------- */
+const DB = 'pexeso-studio', STORE = 'kv';
+let dbP = null, dbH = null;
+const idb = () => dbP || (dbP = new Promise((res, rej) => {
+  const r = indexedDB.open(DB, 1);
+  r.onupgradeneeded = () => r.result.createObjectStore(STORE);
+  r.onsuccess = () => { dbH = r.result; res(r.result); }; r.onerror = () => { dbP = null; rej(r.error); };
+}));
+async function idbGet(k) { const db = await idb(); return new Promise((res, rej) => { const q = db.transaction(STORE).objectStore(STORE).get(k); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }); }
+async function idbSet(k, v) { const db = await idb(); return new Promise((res, rej) => { const t = db.transaction(STORE, 'readwrite'); t.objectStore(STORE).put(v, k); t.oncomplete = () => res(); t.onerror = () => rej(t.error); }); }
+
+async function idbDel(k) { const db = await idb(); return new Promise((res, rej) => { const t = db.transaction(STORE, 'readwrite'); t.objectStore(STORE).delete(k); t.oncomplete = () => res(); t.onerror = () => rej(t.error); }); }
+
+/* V prohlížeči: 'list' = seznam projektů, 'p:<id>' = projekt bez obrázků, 'a:<id>' = obrázek,
+   'current' = naposledy otevřený projekt, 'fh:<id>' = propojený soubor projektu.
+   Obrázky se zapisují jen jednou, takže každá změna uloží jen malý záznam projektu. */
+let fileHandle = null, fileOk = false, saveTimer = null, dirty = false;
+let projects = [];                 // [{ id, name, updated, pairs, assets: [...] }]
+const storedAssets = new Set();    // obrázky, které už v IndexedDB jsou
+function setStatus(t, err) { const s = $('#status'); s.textContent = t; s.classList.toggle('err', !!err); }
+const hhmm = () => new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
+function markDirty() { dirty = true; setStatus('Ukládám…'); clearTimeout(saveTimer); saveTimer = setTimeout(persist, 150); }
+async function writeLinked() {
+  const w = await fileHandle.createWritable(); await w.write(JSON.stringify(S)); await w.close();
+}
+let saving = Promise.resolve();
+function persist() { clearTimeout(saveTimer); saving = saving.then(persistNow, persistNow); return saving; }
+// Zápis začíná synchronně v jedné transakci, takže doběhne i při zavírání stránky.
+function writeTx() {
+  gcAssets();
+  const ids = Object.keys(S.assets), { assets, ...doc } = S;
+  const prev = projects.find(p => p.id === S.id);
+  projects = [{ id: S.id, name: S.name, updated: Date.now(), pairs: S.pairs.length, assets: ids }, ...projects.filter(p => p.id !== S.id)];
+  const t = dbH.transaction(STORE, 'readwrite'), st = t.objectStore(STORE);
+  const fresh = ids.filter(id => !storedAssets.has(id));
+  fresh.forEach(id => st.put(S.assets[id], 'a:' + id));
+  st.put(doc, 'p:' + S.id); st.put(projects, 'list'); st.put(S.id, 'current');
+  const done = new Promise((res, rej) => {
+    t.oncomplete = () => { fresh.forEach(id => storedAssets.add(id)); res(); };
+    t.onerror = t.onabort = () => rej(t.error);
+  });
+  return { done, removed: prev ? prev.assets.filter(id => !ids.includes(id)) : [] };
+}
+async function persistNow() {
+  clearTimeout(saveTimer); if (!dirty) return;
+  const where = [];
+  try {
+    await idb(); dirty = false;
+    const w = writeTx(); await w.done; await dropAssets(w.removed);
+    where.push('v prohlížeči'); renderProjects();
+  } catch (e) { console.error(e); setStatus('Uložení do prohlížeče selhalo (plné úložiště?). Použij Uložit do souboru.', true); return; }
+  try { if (fileHandle && fileOk) { await writeLinked(); where.push('v souboru ' + fileHandle.name); } }
+  catch (e) { setStatus('Zápis do propojeného souboru selhal. Zkus ho propojit znovu.', true); return; }
+  setStatus(`Uloženo ${where.join(' a ')} (${hhmm()})`);
+}
+// smaže obrázky, které už nepoužívá žádný uložený projekt
+async function dropAssets(ids) {
+  for (const id of ids) {
+    if (projects.some(p => p.assets.includes(id))) continue;
+    await idbDel('a:' + id); storedAssets.delete(id);
+  }
+}
+const flush = () => { if (dirty) persist(); };
+// při odchodu ze stránky zapsat hned, bez čekání na odložené uložení
+const flushNow = () => { if (!dirty || !dbH) return; clearTimeout(saveTimer); dirty = false; try { writeTx(); } catch (e) { dirty = true; } };
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushNow(); });
+window.addEventListener('pagehide', flushNow);
+window.addEventListener('beforeunload', flushNow);
+
+async function readProject(id) {
+  const doc = await idbGet('p:' + id); if (!doc) return null;
+  const entry = projects.find(p => p.id === id), assets = {};
+  for (const a of (entry ? entry.assets : [])) { const v = await idbGet('a:' + a); if (v) { assets[a] = v; storedAssets.add(a); } }
+  return normalize({ ...doc, assets });
+}
+async function openProject(id) {
+  if (id === S.id) return;
+  await flush(); await saving;
+  try {
+    const p = await readProject(id);
+    if (!p) { alert('Projekt se nepodařilo načíst.'); return; }
+    loadProject(p); await loadHandle(); dirty = true; await persist();
+  } catch (e) { console.error(e); alert('Projekt se nepodařilo načíst.'); }
+}
+async function startProject(p) {
+  await flush(); await saving;
+  loadProject(p); fileHandle = null; fileOk = false; updateLinkBtn(); dirty = true; await persist();
+}
+async function loadHandle() {
+  fileHandle = null; fileOk = false;
+  try {
+    const h = await idbGet('fh:' + S.id);
+    if (h) { fileHandle = h; fileOk = (await h.queryPermission({ mode: 'readwrite' })) === 'granted'; }
+  } catch (e) { /* ignorováno */ }
+  updateLinkBtn();
+}
+const fmtDate = t => new Date(t).toLocaleString('cs-CZ', { day: 'numeric', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+const parPl = n => n === 1 ? 'pár' : n >= 2 && n <= 4 ? 'páry' : 'párů';
+let projKey = '';
+function renderProjects() {
+  const list = $('#projList');
+  const name = $('#projName'); if (document.activeElement !== name) name.value = S.name;
+  // seznam se přestaví jen při změně pořadí nebo otevřeného projektu, jinak by se ztrácela kliknutí
+  const key = projects.map(e => e.id).join() + '|' + S.id;
+  if (key !== projKey) {
+    projKey = key; list.textContent = '';
+    projects.forEach(e => {
+      const cur = e.id === S.id, row = document.createElement('div');
+      row.className = 'proj' + (cur ? ' cur' : ''); row.dataset.id = e.id;
+      row.innerHTML = `<b></b><div class="btns">${cur ? '' : '<button data-a="open">Otevřít</button>'}<button data-a="dup">Duplikovat</button><button data-a="del">Smazat</button></div><small></small>`;
+      list.appendChild(row);
+    });
+  }
+  $$('.proj', list).forEach(row => {
+    const e = projects.find(x => x.id === row.dataset.id); if (!e) return;
+    const cur = e.id === S.id;
+    $('b', row).textContent = (cur ? S.name : e.name) || 'Bez názvu';
+    $('small', row).textContent = `${cur ? 'otevřený, ' : ''}${fmtDate(e.updated)}, ${e.pairs} ${parPl(e.pairs)}`;
+  });
+}
+$('#projList').addEventListener('click', async ev => {
+  const a = ev.target.dataset && ev.target.dataset.a, row = ev.target.closest('.proj'); if (!a || !row) return;
+  const e = projects.find(x => x.id === row.dataset.id); if (!e) return;
+  const cur = e.id === S.id;
+  if (a === 'open') openProject(e.id);
+  if (a === 'dup') {
+    await flush(); await saving;
+    const src = cur ? S : await readProject(e.id); if (!src) return;
+    const copy = normalize(JSON.parse(JSON.stringify(src)));
+    copy.id = uid(); copy.name = (src.name || 'Projekt') + ' (kopie)';
+    startProject(copy);
+  }
+  if (a === 'del' && confirm(`Smazat projekt „${e.name || 'Bez názvu'}“ z tohoto prohlížeče? Soubory na disku zůstanou.`)) {
+    if (cur) { clearTimeout(saveTimer); dirty = false; }
+    await saving;
+    projects = projects.filter(p => p.id !== e.id);
+    try { await idbDel('p:' + e.id); await idbDel('fh:' + e.id); await idbSet('list', projects); await dropAssets(e.assets); } catch (err) { console.error(err); }
+    if (cur) { const next = projects[0]; if (next) { S = { id: null }; await openProject(next.id); } else startProject(freshProject()); }
+    else renderProjects();
+  }
+});
+$('#projName').addEventListener('input', e => { S.name = e.target.value; renderProjects(); markDirty(); });
+
+function download(blob, name) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+const fileBase = () => (S.name || 'pexeso').trim().replace(/[\\/:*?"<>|]+/g, '').replace(/\s+/g, '-') || 'pexeso';
+$('#btnSave').addEventListener('click', () => { gcAssets(); download(new Blob([JSON.stringify(S)], { type: 'application/json' }), fileBase() + '.json'); });
+$('#btnOpen').addEventListener('click', () => $('#fileJson').click());
+$('#fileJson').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try {
+    const d = JSON.parse(await f.text());
+    if (!d || !Array.isArray(d.pairs)) throw new Error('To není projekt pexesa.');
+    const p = normalize(d);
+    // otevřený soubor je vždy nový projekt, aby nepřepsal stejný projekt uložený v prohlížeči
+    p.id = uid(); if (!d.name) p.name = f.name.replace(/\.json$/i, '');
+    startProject(p);
+  } catch (err) { alert('Soubor se nepodařilo otevřít: ' + err.message); }
+});
+$('#btnNew').addEventListener('click', () => startProject(freshProject()));
+$('#btnLink').addEventListener('click', async () => {
+  if (fileHandle && !fileOk) {
+    try { fileOk = (await fileHandle.requestPermission({ mode: 'readwrite' })) === 'granted'; } catch (e) { fileOk = false; }
+    if (fileOk) { dirty = true; await persist(); updateLinkBtn(); return; }
+  }
+  if (!window.showSaveFilePicker) { alert('Tvůj prohlížeč neumí průběžné ukládání do souboru. Použij Chrome nebo Edge, případně tlačítko Uložit do souboru.'); return; }
+  try {
+    fileHandle = await window.showSaveFilePicker({ suggestedName: fileBase() + '.json', types: [{ description: 'Projekt pexesa', accept: { 'application/json': ['.json'] } }] });
+    fileOk = true; try { await idbSet('fh:' + S.id, fileHandle); } catch (e) { /* ignorováno */ }
+    dirty = true; await persist(); updateLinkBtn();
+  } catch (e) { /* zrušeno */ }
+});
+function updateLinkBtn() {
+  const b = $('#btnLink');
+  b.textContent = !fileHandle ? 'Propojit soubor' : fileOk ? `Soubor: ${fileHandle.name}` : `Obnovit propojení: ${fileHandle.name}`;
+}
+function normalize(d) {
+  const o = makeDefault();
+  if (d.id) o.id = String(d.id);
+  if (typeof d.name === 'string') o.name = d.name;
+  if (d.s) Object.assign(o.s, d.s);
+  if (d.backs) ['img', 'txt'].forEach(k => { if (d.backs[k]) Object.assign(o.backs[k], d.backs[k]); });
+  o.pairs = (d.pairs || []).map(p => ({ id: p.id || uid(), text: p.text || '', pt: p.pt || null, img: Object.assign(newTr(), p.img || {}) }));
+  o.assets = d.assets || {};
+  return o;
+}
+function loadProject(p) {
+  S = p; imgCache.clear(); sheetIdx = 0;
+  sel = S.pairs[0] ? { kind: 'pair', id: S.pairs[0].id } : null;
+  syncSettingsUI(); renderPairs(); updateInfo(); syncCtrl(); updateSelUI(); renderProjects(); ensureFont(); requestRender();
+}
+
+/* ---------- export PDF ---------- */
+function buildPDF(pages, Wmm, Hmm, dpi) {
+  const enc = new TextEncoder(), chunks = [], offsets = [];
+  let len = 0;
+  const push = d => { const u = typeof d === 'string' ? enc.encode(d) : d; chunks.push(u); len += u.length; };
+  const wPt = (Wmm * MM_PT).toFixed(3), hPt = (Hmm * MM_PT).toFixed(3);
+  const n = pages.length, total = 2 + 3 * n;
+  const obj = (num, fn) => { offsets[num] = len; push(`${num} 0 obj\n`); fn(); push('\nendobj\n'); };
+  push('%PDF-1.4\n%\u00e2\u00e3\u00cf\u00d3\n');
+  obj(1, () => push('<< /Type /Catalog /Pages 2 0 R >>'));
+  obj(2, () => push(`<< /Type /Pages /Kids [${pages.map((_, i) => `${3 + 3 * i} 0 R`).join(' ')}] /Count ${n} >>`));
+  pages.forEach((p, i) => {
+    const po = 3 + 3 * i, co = po + 1, io = po + 2;
+    obj(po, () => push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${wPt} ${hPt}] /Resources << /XObject << /Im0 ${io} 0 R >> >> /Contents ${co} 0 R >>`));
+    // obrázek přesně v 300 dpi od levého horního rohu, aby raster seděl s vektorovými značkami
+    const iw = p.w * 72 / dpi, ih = p.h * 72 / dpi;
+    let c = `q ${iw.toFixed(4)} 0 0 ${ih.toFixed(4)} 0 ${(Hmm * MM_PT - ih).toFixed(4)} cm /Im0 Do Q\n`;
+    if (p.segs.length) {
+      c += '0 0 0 1 K 0.25 w\n';
+      p.segs.forEach(([x1, y1, x2, y2]) => {
+        c += `${(x1 * MM_PT).toFixed(3)} ${((Hmm - y1) * MM_PT).toFixed(3)} m ${(x2 * MM_PT).toFixed(3)} ${((Hmm - y2) * MM_PT).toFixed(3)} l S\n`;
+      });
+    }
+    obj(co, () => { push(`<< /Length ${enc.encode(c).length} >>\nstream\n`); push(c); push('endstream'); });
+    obj(io, () => {
+      push(`<< /Type /XObject /Subtype /Image /Width ${p.w} /Height ${p.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${p.bytes.length} >>\nstream\n`);
+      push(p.bytes); push('\nendstream');
+    });
+  });
+  const xref = len;
+  let x = `xref\n0 ${total + 1}\n0000000000 65535 f \n`;
+  for (let i = 1; i <= total; i++) x += String(offsets[i]).padStart(10, '0') + ' 00000 n \n';
+  push(x); push(`trailer\n<< /Size ${total + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`);
+  return new Blob(chunks, { type: 'application/pdf' });
+}
+$('#btnPdf').addEventListener('click', async () => {
+  const g = geom(), btn = $('#btnPdf');
+  if (!g.per) { alert('Dlaždice se na arch nevejde. Zmenši ji nebo spadávku.'); return; }
+  if (!S.pairs.length) { alert('Přidej alespoň jeden pár.'); return; }
+  const over = S.pairs.filter(textOverflows).length;
+  if (over && !confirm(`U ${over} párů se text nevejde do dlaždice. Přesto exportovat?`)) return;
+  btn.disabled = true; const label = btn.textContent;
+  try {
+    await ensureFont(); await ensureAllImages();
+    const sheets = sheetCount(), K = 300 / 25.4;
+    const cw = Math.round(g.W * K), ch = Math.round(g.H * K);
+    const cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
+    const ctx = cv.getContext('2d'), pages = [];
+    for (let i = 0; i < sheets; i++) {
+      for (const side of ['front', 'back']) {
+        btn.textContent = `Generuji stranu ${pages.length + 1} z ${sheets * 2}…`; await tick();
+        drawSheet(ctx, i, side, K, { marks: false, preview: false });
+        const blob = await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.95));
+        pages.push({ bytes: new Uint8Array(await blob.arrayBuffer()), w: cw, h: ch, segs: sheetSegs(i, side) });
+      }
+    }
+    download(buildPDF(pages, g.W, g.H, 300), 'pexeso-tisk-300dpi.pdf');
+    setStatus(`PDF vygenerováno (${hhmm()})`);
+  } catch (e) {
+    console.error(e); setStatus('Export PDF selhal: ' + (e.message || e), true);
+  } finally { btn.disabled = false; btn.textContent = label; }
+});
+
+/* ---------- start ---------- */
+(async function init() {
+  buildFontList();
+  try {
+    projects = (await idbGet('list')) || [];
+    if (!projects.length) {
+      // převod z verze, která měla jen jeden projekt pod klíčem 'project'
+      const old = await idbGet('project');
+      if (old && Array.isArray(old.pairs)) {
+        S = normalize(old); S.name = 'Pexeso'; dirty = true;
+        const h = await idbGet('fileHandle'); if (h) await idbSet('fh:' + S.id, h);
+      }
+    } else {
+      const cur = await idbGet('current');
+      const p = await readProject(projects.some(e => e.id === cur) ? cur : projects[0].id);
+      if (p) S = p;
+    }
+  } catch (e) { console.error(e); }
+  if (!projects.some(e => e.id === S.id)) dirty = true;   // nový projekt hned zapsat do seznamu
+  sel = S.pairs[0] ? { kind: 'pair', id: S.pairs[0].id } : null;
+  syncSettingsUI(); renderPairs(); updateInfo(); syncCtrl(); updateSelUI(); renderProjects();
+  await loadHandle();
+  setStatus('Změny se ukládají automaticky v tomto prohlížeči.');
+  if (dirty) persist();
+  if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+  ensureFont(); setView('editor');
+})();
+})();
+</script>
+</body>
+</html>
